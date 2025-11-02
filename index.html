@@ -76,6 +76,9 @@ RMMMMRMMMMME        EMMMMMMMMMMMMM!
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     <style>
         /* Stile personalizzato */
+        html, body {
+            touch-action: manipulation;
+        }
         body {
             font-family: 'Inter', sans-serif;
             -webkit-user-select: none; /* Safari */
@@ -191,6 +194,30 @@ RMMMMRMMMMME        EMMMMMMMMMMMMM!
             visibility: visible;
         }
 
+        /* Stili per i gruppi di bottoni */
+        .button-group {
+            display: flex;
+            overflow: hidden;
+            border-radius: 0.5rem; /* rounded-lg */
+            background-color: #E5E7EB; /* bg-gray-200 */
+            border: 1px solid #E5E7EB; /* border-gray-200 */
+        }
+        .button-group > button {
+            border-radius: 0;
+        }
+        .button-group > button:first-child {
+            border-left: none;
+        }
+        .button-group > button.active {
+            background-color: #D1D5DB; /* gray-300 */
+        }
+
+        /* Stile per il feedback al click su mobile */
+        .mobile-active {
+            background-color: #D1D5DB !important; /* gray-300 */
+            transition: background-color 0.1s ease-in-out;
+        }
+
         /* Stili per la barra superiore responsiva */
         #top-bar {
             display: grid;
@@ -204,6 +231,9 @@ RMMMMRMMMMME        EMMMMMMMMMMMMM!
         #open-sidebar-button {
             grid-area: open;
             justify-self: start;
+            display: flex; /* Aggiunto per coerenza */
+            align-items: center; /* Aggiunto per coerenza */
+            justify-content: center; /* Aggiunto per coerenza */
         }
         #search-container {
             grid-area: search;
@@ -374,6 +404,45 @@ RMMMMRMMMMME        EMMMMMMMMMMMMM!
                 width: 900px !important;
             }
         }
+        @media (max-width: 600px) {
+            #zoom-controls {
+                position: fixed;
+                right: 16px;
+                top: 50%;
+                transform: translateY(-50%);
+                flex-direction: column;
+                width: auto;
+                z-index: 45;
+            }
+            #zoom-controls.button-group {
+                border-radius: 0.75rem;
+            }
+            #zoom-controls > button {
+                border-left: none;
+                width: 48px;
+            }
+            #zoom-controls > button:first-child {
+                border-top: none;
+                border-top-left-radius: 0.75rem;
+                border-top-right-radius: 0.75rem;
+            }
+            #zoom-controls > button:last-child {
+                border-bottom-left-radius: 0.75rem;
+                border-bottom-right-radius: 0.75rem;
+            }
+            #share-btn {
+                position: fixed;
+                right: 16px;
+                top: calc(50% + 84px);
+                width: 48px;
+                height: 48px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 0.75rem;
+                z-index: 45;
+            }
+        }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-900 no-transition">
@@ -408,24 +477,29 @@ RMMMMRMMMMME        EMMMMMMMMMMMMM!
         <!-- Controlli a Destra (Vista e Zoom) -->
         <div id="right-controls">
             <!-- Controlli Vista -->
-            <div id="view-controls" class="flex space-x-1 hidden">
-                <button id="perspective-view-btn" class="p-2 rounded-lg bg-gray-300 border border-gray-200 hover-effect text-gray-900 transition-colors duration-200" aria-label="Vista Prospettica" data-tooltip="Vista Prospettica">
+            <div id="view-controls" class="button-group hidden">
+                <button id="perspective-view-btn" class="p-2 hover-effect text-gray-900 transition-colors duration-200" aria-label="Vista Prospettica" data-tooltip="Vista Prospettica">
                     <span class="material-symbols-outlined" style="font-size: 32px; line-height: 1;">view_in_ar</span>
                 </button>
-                <button id="top-view-btn" class="p-2 rounded-lg bg-gray-200 border border-gray-200 hover-effect text-gray-900 transition-colors duration-200" aria-label="Vista dall'alto" data-tooltip="Vista dall'alto">
+                <button id="top-view-btn" class="p-2 hover-effect text-gray-900 transition-colors duration-200" aria-label="Vista dall'alto" data-tooltip="Vista dall'alto">
                     <span class="material-symbols-outlined" style="font-size: 32px; line-height: 1;">grid_view</span>
                 </button>
             </div>
 
+            <!-- Pulsante Condividi -->
+            <button id="share-btn" class="p-2 rounded-lg bg-gray-200 border border-gray-200 hover-effect text-gray-900 transition-colors duration-200" aria-label="Condividi" data-tooltip="Copia link" data-shortcut="j">
+                <span class="material-symbols-outlined" style="font-size: 32px; line-height: 1;">share</span>
+            </button>
+
             <!-- Controlli Zoom -->
-            <div id="zoom-controls" class="flex space-x-1">
-                <button id="zoom-in-btn" class="p-2 rounded-lg bg-gray-200 border border-gray-200 hover-effect text-gray-900 transition-colors duration-200" aria-label="Ingrandisci" data-tooltip="Ingrandisci">
+            <div id="zoom-controls" class="button-group">
+                <button id="zoom-in-btn" class="p-2 hover-effect text-gray-900 transition-colors duration-200" aria-label="Ingrandisci" data-tooltip="Ingrandisci">
                     <span class="material-symbols-outlined" style="font-size: 32px; line-height: 1;">zoom_in</span>
                 </button>
-                <button id="zoom-out-btn" class="p-2 rounded-lg bg-gray-200 border border-gray-200 hover-effect text-gray-900 transition-colors duration-200" aria-label="Riduci" data-tooltip="Riduci">
+                <button id="zoom-out-btn" class="p-2 hover-effect text-gray-900 transition-colors duration-200" aria-label="Riduci" data-tooltip="Riduci">
                     <span class="material-symbols-outlined" style="font-size: 32px; line-height: 1;">zoom_out</span>
                 </button>
-                <button id="reset-zoom-btn" class="p-2 rounded-lg bg-gray-200 border border-gray-200 hover-effect text-gray-900 transition-colors duration-200" aria-label="Centra visuale" data-tooltip="Centra visuale">
+                <button id="reset-zoom-btn" class="p-2 hover-effect text-gray-900 transition-colors duration-200" aria-label="Centra visuale" data-tooltip="Centra visuale" data-shortcut="k">
                     <span class="material-symbols-outlined" style="font-size: 32px; line-height: 1;">center_focus_strong</span>
                 </button>
             </div>
@@ -535,13 +609,55 @@ RMMMMRMMMMME        EMMMMMMMMMMMMM!
     <script src="https://cdn.jsdelivr.net/npm/@panzoom/panzoom@4.5.1/dist/panzoom.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            const preventNativeZoomGestures = () => {
+                let lastTouchEnd = 0;
+
+                document.addEventListener('gesturestart', (event) => {
+                    event.preventDefault();
+                }, { passive: false });
+
+                document.addEventListener('gesturechange', (event) => {
+                    event.preventDefault();
+                }, { passive: false });
+
+                document.addEventListener('gestureend', (event) => {
+                    event.preventDefault();
+                }, { passive: false });
+
+                document.addEventListener('touchend', (event) => {
+                    const now = Date.now();
+                    if (now - lastTouchEnd <= 350) {
+                        event.preventDefault();
+                    }
+                    lastTouchEnd = now;
+                }, { passive: false });
+            };
+
+            preventNativeZoomGestures();
+
             const tooltipElement = document.getElementById('tooltip');
+
+            function getShortcutModifiers() {
+                const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+                if (isMac) {
+                    return '⌃⌥';
+                }
+                return 'Ctrl+Shift+';
+            }
 
             const showTooltip = (event) => {
                 if (isMobile()) return; // Non mostrare tooltip su mobile
                 const target = event.currentTarget;
-                const tooltipText = target.getAttribute('data-tooltip');
+                let tooltipText = target.getAttribute('data-tooltip');
                 if (!tooltipText) return;
+
+                const shortcutKey = target.getAttribute('data-shortcut');
+                if (shortcutKey) {
+                    const modifiers = getShortcutModifiers();
+                    const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+                    const shortcutDisplay = isMac ? `${modifiers}${shortcutKey.toUpperCase()}` : `${modifiers}${shortcutKey.toUpperCase()}`;
+                    tooltipText += ` (${shortcutDisplay})`;
+                }
 
                 // Applica il testo e rendi visibile per calcolare le dimensioni
                 tooltipElement.textContent = tooltipText;
@@ -614,6 +730,7 @@ RMMMMRMMMMME        EMMMMMMMMMMMMM!
             const searchResults = document.getElementById('search-results');
             const searchInputMobile = document.getElementById('search-input-mobile');
             const searchResultsMobile = document.getElementById('search-results-mobile');
+            const shareBtn = document.getElementById('share-btn');
 
             let data = {};
             let selectedPolo = '';
@@ -754,6 +871,27 @@ RMMMMRMMMMME        EMMMMMMMMMMMMM!
             setupSearchListeners(searchInput, searchResults);
             setupSearchListeners(searchInputMobile, searchResultsMobile);
 
+            // Aggiungi listener per le scorciatoie da tastiera
+            document.addEventListener('keydown', (e) => {
+                // Non attivare le scorciatoie se si sta scrivendo in un campo di input
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+                    return;
+                }
+
+                // Uso Ctrl + Alt su tutti i sistemi per coerenza ed evitare conflitti su Mac
+                if (e.ctrlKey && e.altKey) {
+                    switch (e.key.toLowerCase()) {
+                        case 'j':
+                            e.preventDefault();
+                            shareBtn.click();
+                            break;
+                        case 'k':
+                            e.preventDefault();
+                            resetZoomBtn.click();
+                            break;
+                    }
+                }
+            });
 
             // Nascondi i risultati se si clicca fuori
             document.addEventListener('click', (e) => {
@@ -763,40 +901,92 @@ RMMMMRMMMMME        EMMMMMMMMMMMMM!
                 }
             });
 
+            // Funzione per copiare il link
+            shareBtn.addEventListener('click', () => {
+                // Aggiungi feedback visivo istantaneo
+                shareBtn.classList.add('mobile-active');
+                setTimeout(() => {
+                    shareBtn.classList.remove('mobile-active');
+                }, 200); // Rimuovi dopo 200ms
+
+                const url = window.location.href;
+                navigator.clipboard.writeText(url).then(() => {
+                    // Feedback per l'utente (tooltip)
+                    const originalTooltip = shareBtn.getAttribute('data-tooltip');
+                    shareBtn.setAttribute('data-tooltip', 'Link copiato!');
+                    showTooltip({ currentTarget: shareBtn }); // Mostra subito il nuovo tooltip
+                    setTimeout(() => {
+                        shareBtn.setAttribute('data-tooltip', originalTooltip);
+                        hideTooltip();
+                    }, 2000);
+                }).catch(err => {
+                    console.error('Errore nella copia del link: ', err);
+                    // Fallback per l'utente
+                    const originalTooltip = shareBtn.getAttribute('data-tooltip');
+                    shareBtn.setAttribute('data-tooltip', 'Errore!');
+                    showTooltip({ currentTarget: shareBtn });
+                    setTimeout(() => {
+                        shareBtn.setAttribute('data-tooltip', originalTooltip);
+                        hideTooltip();
+                    }, 2000);
+                });
+            });
+
             // Funzione per aggiornare l'URL
-            function updateURL() {
+            function updateURL(replace = false) {
                 if (!selectedPolo || !selectedBuilding || !selectedFloor) return;
                 
-                const params = new URLSearchParams(window.location.search);
-                params.set('polo', selectedPolo);
-                params.set('edificio', selectedBuilding);
-                params.set('piano', selectedFloor);
+                const params = new URLSearchParams();
+                params.set('p', selectedPolo);
+                params.set('b', selectedBuilding);
+                params.set('f', selectedFloor);
+                params.set('v', currentView); // Aggiunto per tracciare la vista
+
+                if (panzoomInstance) {
+                    const pan = panzoomInstance.getPan();
+                    const scale = panzoomInstance.getScale();
+                    params.set('x', Math.round(pan.x));
+                    params.set('y', Math.round(pan.y));
+                    params.set('z', scale.toFixed(2));
+                }
 
                 const newUrl = `${window.location.pathname}?${params.toString()}`;
-                // Aggiorna l'URL senza ricaricare la pagina
-                history.pushState({ polo: selectedPolo, building: selectedBuilding, floor: selectedFloor }, '', newUrl);
+                const state = { polo: selectedPolo, building: selectedBuilding, floor: selectedFloor, view: currentView };
+
+                if (replace) {
+                    history.replaceState(state, '', newUrl);
+                } else {
+                    history.pushState(state, '', newUrl);
+                }
             }
 
             // Funzione per gestire il caricamento iniziale basato sull'URL
             function handleInitialLoad() {
                 const params = new URLSearchParams(window.location.search);
-                const poloParam = params.get('polo');
-                const buildingParam = params.get('edificio');
-                const floorParam = params.get('piano');
+                const poloParam = params.get('p') || params.get('polo');
+                const buildingParam = params.get('b') || params.get('edificio');
+                const floorParam = params.get('f') || params.get('piano');
+                const viewParam = params.get('v');
+                const viewParams = {
+                    x: params.get('x'),
+                    y: params.get('y'),
+                    z: params.get('z')
+                };
 
                 const polos = Object.keys(data.polo);
                 if (polos.length === 0) return;
 
                 const poloToSelect = poloParam && data.polo[poloParam] ? poloParam : polos[0];
                 
-                // Passa i parametri dell'edificio e del piano alle funzioni di selezione
-                selectPolo(poloToSelect, buildingParam, floorParam);
+                // Passa i parametri dell'edificio, del piano e della vista
+                selectPolo(poloToSelect, buildingParam, floorParam, viewParams, viewParam);
             }
 
             // Funzione per chiudere la sidebar (logica unificata)
             function closeSidebar() {
                 sidebar.classList.add('-translate-x-full');
             }
+
 
             // Funzione per aprire la sidebar (logica unificata)
             function openSidebar() {
@@ -886,7 +1076,7 @@ RMMMMRMMMMME        EMMMMMMMMMMMMM!
                 });
             }
 
-            function selectPolo(polo, buildingToSelect = null, floorToSelect = null) {
+            function selectPolo(polo, buildingToSelect = null, floorToSelect = null, viewParams = null, viewToSelect = null) {
                 selectedPolo = polo;
                 const buildings = Object.keys(data.polo[polo].edificio);
                 populateBuildings(buildings);
@@ -903,7 +1093,7 @@ RMMMMRMMMMME        EMMMMMMMMMMMMM!
 
                 if (buildings.length > 0) {
                     const building = buildingToSelect && buildings.includes(buildingToSelect) ? buildingToSelect : buildings[0];
-                    selectBuilding(building, floorToSelect);
+                    selectBuilding(building, floorToSelect, viewParams, viewToSelect);
                 } else {
                     floorsList.innerHTML = '';
                     roomsList.innerHTML = '';
@@ -996,7 +1186,7 @@ RMMMMRMMMMME        EMMMMMMMMMMMMM!
                 }
             }
 
-            function selectBuilding(building, floorToSelect = null) {
+            function selectBuilding(building, floorToSelect = null, viewParams = null, viewToSelect = null) {
                 selectedBuilding = building;
                 populateFloors(building);
 
@@ -1019,13 +1209,14 @@ RMMMMRMMMMME        EMMMMMMMMMMMMM!
                 } else if (floors.length > 0) {
                     floorToSet = floors[0];
                 }
-                selectFloor(floorToSet);
+                selectFloor(floorToSet, viewParams, viewToSelect);
             }
 
-            function selectFloor(floor) {
+            function selectFloor(floor, viewParams = null, viewToSelect = null) {
                 selectedFloor = floor;
-                // Resetta la vista a top quando si cambia piano
-                selectView('top', true); // Imposta sempre la vista top di default
+                
+                const view = viewToSelect === 'perspective' ? 'perspective' : 'top';
+                selectView(view, true, viewParams);
                 populateRooms(selectedBuilding, selectedFloor);
 
                 // Aggiorna lo stile dei bottoni dei piani
@@ -1038,26 +1229,22 @@ RMMMMRMMMMME        EMMMMMMMMMMMMM!
                     }
                 });
                 
-                updateURL(); // Aggiorna l'URL ogni volta che si seleziona un piano
+                updateURL(true); // Aggiorna l'URL ogni volta che si seleziona un piano
             }
 
-            function selectView(viewType, forceReload = false) {
+            function selectView(viewType, forceReload = false, viewParams = null) {
                 if (currentView === viewType && !forceReload) return;
 
                 currentView = viewType;
-                loadSVG(selectedBuilding, selectedFloor, currentView);
+                loadSVG(selectedBuilding, selectedFloor, currentView, viewParams);
 
                 // Aggiorna stile bottoni vista
                 if (viewType === 'top') {
-                    topViewBtn.classList.add('bg-gray-300');
-                    topViewBtn.classList.remove('bg-gray-200');
-                    perspectiveViewBtn.classList.add('bg-gray-200');
-                    perspectiveViewBtn.classList.remove('bg-gray-300');
+                    topViewBtn.classList.add('active');
+                    perspectiveViewBtn.classList.remove('active');
                 } else {
-                    perspectiveViewBtn.classList.add('bg-gray-300');
-                    perspectiveViewBtn.classList.remove('bg-gray-200');
-                    topViewBtn.classList.add('bg-gray-200');
-                    topViewBtn.classList.remove('bg-gray-300');
+                    perspectiveViewBtn.classList.add('active');
+                    topViewBtn.classList.remove('active');
                 }
             }
 
@@ -1077,7 +1264,7 @@ RMMMMRMMMMME        EMMMMMMMMMMMMM!
                     });
             }
 
-            function loadSVG(building, floor, viewType = 'top') {
+            function loadSVG(building, floor, viewType = 'top', viewParams = null) {
                 // Controlla se la vista top è disponibile
                 checkForTopView(building, floor);
 
@@ -1122,19 +1309,27 @@ RMMMMRMMMMME        EMMMMMMMMMMMMM!
                                     animate: true,
                                     duration: 300, // Durata animazione più fluida
                                     easing: 'ease-out',
-                                    startScale: 1,
+                                    startScale: viewParams && viewParams.z ? parseFloat(viewParams.z) : 1,
+                                    startX: viewParams && viewParams.x ? parseFloat(viewParams.x) : 0,
+                                    startY: viewParams && viewParams.y ? parseFloat(viewParams.y) : 0,
                                     panOnlyWhenZoomed: false,
                                     disablePan: false,
                                     cursor: 'move'
                                 });
 
-                                // Centra e adatta l'SVG al contenitore
-                                // Piccolo timeout per assicurare che il DOM sia pronto
-                                setTimeout(() => {
-                                    if (panzoomInstance) {
-                                        panzoomInstance.reset();
-                                    }
-                                }, 0);
+                                // Aggiungi listener per aggiornare l'URL durante il pan/zoom
+                                svgElement.addEventListener('panzoomend', (e) => {
+                                    updateURL(true);
+                                });
+
+                                // Centra e adatta l'SVG al contenitore se non ci sono parametri di vista
+                                if (!viewParams || !viewParams.x) {
+                                    setTimeout(() => {
+                                        if (panzoomInstance) {
+                                            panzoomInstance.reset();
+                                        }
+                                    }, 0);
+                                }
 
 
                                 // Abilita lo zoom con la rotella del mouse

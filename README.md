@@ -9,7 +9,7 @@
 <p align="center">L’interfaccia consente di navigare in modo interattivo tra gli edifici, visualizzare mappe .SVG dei piani e ottenere dettagli sulle singole aule.</p>
 
 
-<h2 align="right"> Screenshot </h2>
+<h2 align="right"> SCREENSHOT </h2>
 
 <p align="center">
   <img src="assets/screenshots/desktop.png" alt="Screenshot dell'applicazione su desktop">
@@ -155,4 +155,4 @@ Contiene tutti i dati su edifici, piani e aule, e l'interfaccia viene costruita 
 ## Funzionalità che vorrei aggiungere
 
 - [x] **Ricerca intelligente:** Una ricerca che ti auta con il complementamento automatico, e prende in considerazioni i valori alias presenti su rooms.json e altro
-- [ ] **Occupazoini aule:** Collegare in qualche modo University Planner da poter vedere le prenotazioni direttamente sul sito
+- [ ] **Occupazione aule:** Collegare in qualche modo University Planner da poter vedere le prenotazioni direttamente sul sito
