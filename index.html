@@ -74,6 +74,10 @@ RMMMMRMMMMME        EMMMMMMMMMMMMM!
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Caricamento di Google Material Symbols -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <style>
         /* Stile personalizzato */
         html, body {
@@ -85,6 +89,21 @@ RMMMMRMMMMME        EMMMMMMMMMMMMM!
             -moz-user-select: none; /* Firefox */
             -ms-user-select: none; /* IE 10+ */
             user-select: none; /* Standard syntax */
+            font-size: 16px; /* Base font size */
+            transition: font-size 0.2s ease-in-out;
+        }
+        /* Text size scaling classes */
+        body.text-small {
+            font-size: 14px;
+        }
+        body.text-normal {
+            font-size: 16px;
+        }
+        body.text-large {
+            font-size: 18px;
+        }
+        body.text-xlarge {
+            font-size: 20px;
         }
         /* Nascondi la scrollbar del menu di navigazione */
         #navigation-menu::-webkit-scrollbar {
@@ -144,6 +163,13 @@ RMMMMRMMMMME        EMMMMMMMMMMMMM!
         .search-result-item:hover .details {
             color: #1F2937; /* gray-800 */
         }
+        .search-result-item.selected {
+            background-color: rgba(0, 0, 0, 0.1); /* 10% black opacity */
+        }
+        .search-result-item.selected .title,
+        .search-result-item.selected .details {
+            color: #1F2937; /* gray-800 */
+        }
         .nav-item.selected {
             background-color: rgba(0, 0, 0, 0.1);
         }
@@ -171,6 +197,48 @@ RMMMMRMMMMME        EMMMMMMMMMMMMM!
         #viewer-container svg {
             touch-action: none;
             user-select: none;
+        }
+
+        /* Stili per Leaflet map */
+        #viewer-container {
+            position: relative;
+            z-index: 1; /* Livello base per il contenitore della mappa */
+        }
+        #map {
+            width: 100%;
+            height: 100%;
+            background-color: #E5E7EB; /* gray-200 */
+            z-index: 1; /* Mappa al livello più basso */
+            position: relative;
+        }
+        #main-content {
+            position: relative;
+            z-index: 1; /* Contenuto principale dietro all'interfaccia */
+        }
+        .leaflet-container {
+            background-color: #E5E7EB !important; /* gray-200 */
+            z-index: 1 !important; /* Forza la mappa a stare sotto */
+        }
+        .leaflet-pane {
+            z-index: 1 !important; /* Tutti i pannelli Leaflet al livello base */
+        }
+        /* Forza tutti i layer interni di Leaflet a stare sotto l'interfaccia */
+        .leaflet-map-pane,
+        .leaflet-tile-pane,
+        .leaflet-overlay-pane,
+        .leaflet-shadow-pane,
+        .leaflet-marker-pane,
+        .leaflet-tooltip-pane,
+        .leaflet-popup-pane {
+            z-index: 1 !important;
+        }
+        /* Nascondi i controlli di zoom di Leaflet (useremo i nostri) */
+        .leaflet-control-zoom {
+            display: none;
+        }
+        /* Nascondi l'attribuzione di Leaflet */
+        .leaflet-control-attribution {
+            display: none;
         }
 
         /* Stili per i tooltip */
@@ -391,6 +459,16 @@ RMMMMRMMMMME        EMMMMMMMMMMMMM!
                 transition: border-radius 0.3s ease-in-out;
                 overflow: hidden;
             }
+            
+            /* Footer posizionato sotto la ricerca mobile */
+            body > div.fixed.bottom-4 {
+                bottom: 0.75rem !important; /* Ridotto per stare sotto la barra di ricerca */
+            }
+            
+            /* Barra di ricerca mobile spostata più in alto */
+            #mobile-search-container {
+                bottom: 3.5rem !important; /* Spostata più in alto per lasciare spazio al footer sotto */
+            }
         }
 
         /* Stili per mobile */
@@ -472,7 +550,8 @@ RMMMMRMMMMME        EMMMMMMMMMMMMM!
             height: 52px !important;
         }
         .high-contrast button,
-        .high-contrast .button-group > button {
+        .high-contrast .button-group > button,
+        .high-contrast a.bg-gray-200 {
             border: 2px solid black !important;
         }
         .high-contrast .button-group {
@@ -514,6 +593,89 @@ RMMMMRMMMMME        EMMMMMMMMMMMMM!
             stroke: white !important;
             background-color: transparent !important;
         }
+        /* Search result item selected in high contrast mode */
+        .high-contrast .search-result-item.selected {
+            background-color: black !important;
+            color: white !important;
+        }
+        .high-contrast .search-result-item.selected * {
+            background-color: transparent !important;
+            color: white !important;
+        }
+        .high-contrast .search-result-item.selected .title,
+        .high-contrast .search-result-item.selected .details {
+            color: white !important;
+            background-color: transparent !important;
+        }
+        /* Disable transitions on search result items in high contrast mode */
+        .high-contrast .search-result-item {
+            transition: none !important;
+        }
+        /* Disable transitions on department buttons in high contrast mode */
+        .high-contrast a.bg-gray-200 {
+            transition: none !important;
+        }
+        /* Hover effects in high contrast mode */
+        @media (hover: hover) {
+            .high-contrast .nav-item:hover:not(.selected) {
+                background-color: black !important;
+                color: white !important;
+            }
+            .high-contrast .nav-item:hover:not(.selected) * {
+                background-color: transparent !important;
+                color: white !important;
+            }
+            .high-contrast .nav-item:hover:not(.selected) .material-symbols-outlined {
+                color: white !important;
+                background-color: transparent !important;
+            }
+            .high-contrast .nav-item:hover:not(.selected) svg * {
+                fill: white !important;
+                stroke: white !important;
+                background-color: transparent !important;
+            }
+            .high-contrast .search-result-item:hover:not(.selected) {
+                background-color: black !important;
+                color: white !important;
+            }
+            .high-contrast .search-result-item:hover:not(.selected) * {
+                background-color: transparent !important;
+                color: white !important;
+            }
+            .high-contrast .search-result-item:hover:not(.selected) .title,
+            .high-contrast .search-result-item:hover:not(.selected) .details {
+                color: white !important;
+                background-color: transparent !important;
+            }
+            .high-contrast a.bg-gray-200:hover {
+                background-color: black !important;
+                color: white !important;
+            }
+            .high-contrast a.bg-gray-200:hover * {
+                background-color: transparent !important;
+                color: white !important;
+            }
+            .high-contrast a.bg-gray-200:hover .material-symbols-outlined {
+                color: white !important;
+                background-color: transparent !important;
+            }
+            .high-contrast a[href*="github"]:hover {
+                background-color: black !important;
+                color: white !important;
+            }
+            .high-contrast a[href*="github"]:hover * {
+                background-color: transparent !important;
+                color: white !important;
+            }
+            .high-contrast a[href*="github"]:hover .github-icon {
+                fill: white !important;
+            }
+            .high-contrast a[href*="github"]:hover .github-icon * {
+                fill: white !important;
+                stroke: none !important;
+                background-color: transparent !important;
+            }
+        }
         /* Toggle switches in high contrast mode */
         .high-contrast label.relative.inline-flex > div {
             background-color: black !important;
@@ -531,9 +693,63 @@ RMMMMRMMMMME        EMMMMMMMMMMMMM!
             background-color: black !important;
             border-color: black !important;
         }
+        /* Text size control buttons */
+        .text-size-controls {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .text-size-btn {
+            padding: 0.5rem;
+            background-color: #E5E7EB;
+            border: 1px solid #E5E7EB;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.2s ease-in-out;
+            min-width: 40px;
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #1F2937;
+        }
+        .text-size-btn:hover {
+            background-color: #D1D5DB;
+        }
+        .text-size-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .high-contrast .text-size-btn {
+            background-color: white !important;
+            border: 2px solid black !important;
+            color: black !important;
+            transition: none !important;
+        }
+        .high-contrast .text-size-btn:hover:not(:disabled) {
+            background-color: black !important;
+            color: white !important;
+        }
+        .high-contrast .text-size-btn:hover:not(:disabled) .material-symbols-outlined {
+            color: white !important;
+            background-color: transparent !important;
+        }
+        /* Language selector styles */
+        select.text-size-btn {
+            padding: 0.5rem 2.5rem 0.5rem 0.75rem;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%234B5563' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            appearance: none;
+            min-width: 100px;
+        }
+        .high-contrast select.text-size-btn {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23000000' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+        }
     </style>
 </head>
-<body class="bg-gray-100 text-gray-900 no-transition">
+<body class="bg-gray-100 text-gray-900 no-transition text-normal">
 
     <!-- Contenitore per il tooltip -->
     <div id="tooltip" class="tooltip"></div>
@@ -635,7 +851,7 @@ RMMMMRMMMMME        EMMMMMMMMMMMMM!
                 
                 <!-- Edifici -->
                 <div class="p-2">
-                    <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider">Edifici</h3>
+                    <h3 id="buildings-title" class="text-sm font-semibold text-gray-500 uppercase tracking-wider">Edifici</h3>
                     <div id="buildings-list" class="mt-2 space-y-1">
                         <!-- I bottoni degli edifici verranno inseriti qui -->
                     </div>
@@ -643,7 +859,7 @@ RMMMMRMMMMME        EMMMMMMMMMMMMM!
 
                 <!-- Piani -->
                 <div class="p-2">
-                    <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider">Piani</h3>
+                    <h3 id="floors-title" class="text-sm font-semibold text-gray-500 uppercase tracking-wider">Piani</h3>
                     <div id="floors-list" class="mt-2 space-y-1">
                         <!-- I bottoni dei piani verranno inseriti qui -->
                     </div>
@@ -651,6 +867,7 @@ RMMMMRMMMMME        EMMMMMMMMMMMMM!
 
                 <!-- Aule -->
                 <div class="p-2">
+                    <h3 id="rooms-title" class="text-sm font-semibold text-gray-500 uppercase tracking-wider">Aule</h3>
                     <div id="rooms-list" class="mt-2 space-y-1">
                         <!-- Le aule verranno inserite qui -->
                     </div>
@@ -663,7 +880,7 @@ RMMMMRMMMMME        EMMMMMMMMMMMMM!
                     <svg class="w-8 h-8 text-gray-800 github-icon" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
                         <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
                     </svg>
-                    <span>Repository GitHub</span>
+                    <span id="github-link-text">Repository GitHub</span>
                 </a>
             </div>
         </div>
@@ -672,7 +889,7 @@ RMMMMRMMMMME        EMMMMMMMMMMMMM!
         <div id="main-content" class="flex-1 ml-0 transition-all duration-300 ease-in-out">
             <!-- Area Contenuto per il visualizzatore SVG -->
             <div id="viewer-container" class="w-full h-screen overflow-hidden flex items-center justify-center bg-gray-200">
-                <!-- L'SVG verrà caricato qui -->
+                <div id="map"></div>
             </div>
         </div>
     </div>
@@ -698,7 +915,6 @@ RMMMMRMMMMME        EMMMMMMMMMMMMM!
         </span>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@panzoom/panzoom@4.5.1/dist/panzoom.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const preventNativeZoomGestures = () => {
@@ -830,14 +1046,148 @@ RMMMMRMMMMME        EMMMMMMMMMMMMM!
             const storedShareCoordinates = localStorage.getItem('shareCoordinatesEnabled');
             const storedSharePath = localStorage.getItem('sharePathEnabled');
             const storedHighContrast = localStorage.getItem('highContrastEnabled');
+            const storedTextSize = localStorage.getItem('textSizeEnabled');
+            const storedLanguage = localStorage.getItem('selectedLanguage') || 'it';
             const settingsConfig = {
                 shareCoordinates: storedShareCoordinates ? storedShareCoordinates === 'true' : false,
                 sharePath: storedSharePath ? storedSharePath === 'true' : true,
-                highContrast: storedHighContrast ? storedHighContrast === 'true' : false
+                highContrast: storedHighContrast ? storedHighContrast === 'true' : false,
+                language: storedLanguage
             };
+
+            // Localization system
+            let translations = {};
+            let currentLanguage = storedLanguage;
+
+            // Load translations
+            async function loadTranslations(lang) {
+                try {
+                    const response = await fetch(`locales/${lang}.json`);
+                    const data = await response.json();
+                    translations = data;
+                    currentLanguage = lang;
+                    return true;
+                } catch (error) {
+                    console.error('Error loading translations:', error);
+                    return false;
+                }
+            }
+
+            // Get translated text
+            function t(key) {
+                if (translations[key]) {
+                    return translations[key].translation || translations[key].original;
+                }
+                return key;
+            }
+
+            // Apply translations to the page
+            function applyTranslations() {
+                // Update document title
+                document.title = t('app_title');
+                
+                // Update meta tags
+                document.querySelector('meta[name="description"]').content = t('meta_description');
+                document.querySelector('meta[property="og:title"]').content = t('meta_og_title');
+                document.querySelector('meta[property="og:description"]').content = t('meta_og_description');
+                document.querySelector('meta[name="twitter:title"]').content = t('meta_og_title');
+                document.querySelector('meta[name="twitter:description"]').content = t('meta_og_description');
+                
+                // Update HTML lang attribute
+                document.documentElement.lang = currentLanguage;
+                
+                // Update search placeholders
+                searchInput.placeholder = t('search_placeholder');
+                searchInputMobile.placeholder = t('search_placeholder');
+                
+                // Update tooltips
+                openSidebarBtn.setAttribute('data-tooltip', t('sidebar_open'));
+                closeSidebarBtn.setAttribute('data-tooltip', t('sidebar_close'));
+                shareBtn.setAttribute('data-tooltip', t('share_button'));
+                perspectiveViewBtn.setAttribute('data-tooltip', t('view_perspective'));
+                topViewBtn.setAttribute('data-tooltip', t('view_perspective'));
+                perspectiveViewBtn.setAttribute('aria-label', t('view_perspective'));
+                topViewBtn.setAttribute('data-tooltip', t('view_top'));
+                topViewBtn.setAttribute('aria-label', t('view_top'));
+                shareBtn.setAttribute('aria-label', t('share_aria_label'));
+                zoomInBtn.setAttribute('data-tooltip', t('zoom_in'));
+                zoomInBtn.setAttribute('aria-label', t('zoom_in'));
+                zoomOutBtn.setAttribute('data-tooltip', t('zoom_out'));
+                zoomOutBtn.setAttribute('aria-label', t('zoom_out'));
+                resetZoomBtn.setAttribute('data-tooltip', t('zoom_reset'));
+                resetZoomBtn.setAttribute('aria-label', t('zoom_reset'));
+                
+                // Update sidebar title
+                const sidebarTitle = document.querySelector('#sidebar .text-2xl');
+                if (sidebarTitle) {
+                    sidebarTitle.textContent = t('app_title');
+                }
+                
+                // Update footer
+                const footerSpan = document.querySelector('.fixed.bottom-4 span.text-sm');
+                if (footerSpan) {
+                    footerSpan.innerHTML = `
+                        ${t('made_with')} 
+                        <span class="material-symbols-outlined" style="font-size: 16px; vertical-align: -3px;">favorite</span> 
+                        e 
+                        <span class="material-symbols-outlined" style="font-size: 16px; vertical-align: -3px;">smart_toy</span> 
+                        ${t('made_by')} <a href="https://github.com/plumkewe" target="_blank" class="underline font-medium hover-text-effect">Lyubomyr Malay</a>
+                    `;
+                }
+                
+                // Update GitHub link text
+                const githubLinkText = document.getElementById('github-link-text');
+                if (githubLinkText) {
+                    githubLinkText.textContent = t('github_repository');
+                }
+                
+                // Update sidebar section titles
+                const buildingsTitle = document.getElementById('buildings-title');
+                if (buildingsTitle) {
+                    buildingsTitle.textContent = t('buildings_title');
+                }
+                
+                const floorsTitle = document.getElementById('floors-title');
+                if (floorsTitle) {
+                    floorsTitle.textContent = t('floors_title');
+                }
+                
+                const roomsTitle = document.getElementById('rooms-title');
+                if (roomsTitle) {
+                    roomsTitle.textContent = t('rooms_title');
+                }
+                
+                // Update search suggestions
+                searchSuggestions[0] = t('search_placeholder');
+                searchSuggestions[1] = t('search_suggestion_settings');
+                searchSuggestions[2] = t('search_suggestion_classroom');
+                searchSuggestions[3] = t('search_suggestion_capacity');
+                searchSuggestions[4] = t('search_suggestion_department');
+                searchSuggestions[5] = t('search_suggestion_share');
+                
+                // Refresh current search results if visible
+                const currentQuery = isMobile() ? searchInputMobile.value : searchInput.value;
+                if (currentQuery) {
+                    searchRooms(currentQuery);
+                }
+            }
 
             // Apply initial high contrast setting
             setHighContrastSetting(settingsConfig.highContrast);
+
+            // Load translations and apply them
+            loadTranslations(currentLanguage).then(success => {
+                if (success) {
+                    applyTranslations();
+                }
+            });
+
+            // Apply initial text size setting
+            if (storedTextSize && ['text-small', 'text-normal', 'text-large', 'text-xlarge'].includes(storedTextSize)) {
+                const textSizes = ['text-small', 'text-normal', 'text-large', 'text-xlarge'];
+                textSizes.forEach(size => document.body.classList.remove(size));
+                document.body.classList.add(storedTextSize);
+            }
 
             // Gestione controlli accessibilità
             const setAccessibilityControls = (visible) => {
@@ -870,8 +1220,99 @@ RMMMMRMMMMME        EMMMMMMMMMMMMM!
             let selectedBuilding = '';
             let selectedFloor = '0';
             let currentView = 'top'; // 'perspective' o 'top'
-            let panzoomInstance = null;
+            let map = null; // Istanza Leaflet
+            let svgOverlay = null; // Layer SVG corrente
             let selectedSearchResultIndex = -1;
+
+            // Suggerimenti per la ricerca
+            let searchSuggestions = [
+                "Cerca un'aula...",
+                "Prova: Impostazioni",
+                "Prova: Aula D2",
+                "Prova: >200",
+                "Prova: Dipartimento",
+                "Prova: Condividi"
+            ];
+            let currentSuggestionIndex = 0;
+
+            // Funzione per aggiornare il placeholder
+            function updateSearchPlaceholder() {
+                currentSuggestionIndex = (currentSuggestionIndex + 1) % searchSuggestions.length;
+                const newPlaceholder = searchSuggestions[currentSuggestionIndex];
+                searchInput.placeholder = newPlaceholder;
+                searchInputMobile.placeholder = newPlaceholder;
+            }
+
+            // Cambia il suggerimento ogni 5 secondi
+            setInterval(updateSearchPlaceholder, 5000);
+
+            // Nuova funzione per centrare la mappa su un'aula senza ricaricare
+            function centerMapOnRoom(room) {
+                if (!room || !room.coordinates || room.coordinates.x == null || room.coordinates.y == null) {
+                    return false; // Nessuna coordinata disponibile
+                }
+                
+                if (!map) {
+                    return false; // Mappa non ancora inizializzata
+                }
+                
+                const center = [parseFloat(room.coordinates.y), parseFloat(room.coordinates.x)];
+                const zoom = room.coordinates.zoom != null ? parseFloat(room.coordinates.zoom) : 2;
+                
+                // Calcola la distanza dalla posizione corrente per adattare la durata
+                const currentCenter = map.getCenter();
+                const currentZoom = map.getZoom();
+                const distance = Math.sqrt(
+                    Math.pow(center[0] - currentCenter.lat, 2) + 
+                    Math.pow(center[1] - currentCenter.lng, 2)
+                );
+                const zoomDiff = Math.abs(zoom - currentZoom);
+                
+                // Per distanze molto piccole, usa setView istantaneo (più fluido)
+                // Altrimenti usa flyTo con durata ottimizzata
+                if (distance < 0.01 && zoomDiff < 0.5) {
+                    // Movimento molto piccolo - transizione CSS istantanea (60fps garantiti)
+                    map.setView(center, zoom, {
+                        animate: true,
+                        duration: 0.25,
+                        easeLinearity: 0.1
+                    });
+                } else {
+                    // Calcola durata dinamica basata sulla distanza e differenza di zoom
+                    const baseDuration = 0.4; // Durata minima per flyTo
+                    const maxDuration = 1.0; // Durata massima ridotta
+                    const distanceFactor = Math.min(distance * 50, 1);
+                    const zoomFactor = Math.min(zoomDiff * 0.2, 0.5);
+                    const duration = baseDuration + (maxDuration - baseDuration) * Math.max(distanceFactor, zoomFactor);
+                    
+                    // Usa flyTo con easing ottimizzato per 60fps
+                    map.flyTo(center, zoom, {
+                        duration: duration,
+                        easeLinearity: 0.1, // Easing più lineare = animazione più fluida
+                        noMoveStart: true // Evita eventi inutili che rallentano
+                    });
+                }
+                
+                return true; // Centratura eseguita
+            }
+
+            // Nuova funzione per selezionare un'aula senza ricaricare la mappa
+            function selectRoom(polo, edificio, piano, room) {
+                // Verifica se siamo già sul piano corretto
+                const isSameLocation = (
+                    selectedPolo === polo &&
+                    selectedBuilding === edificio &&
+                    selectedFloor === piano
+                );
+                
+                if (isSameLocation) {
+                    // Siamo già sul piano giusto, centra solo la mappa
+                    centerMapOnRoom(room);
+                } else {
+                    // Cambio di piano necessario, ricarica la mappa con le coordinate dell'aula
+                    selectPolo(polo, edificio, piano, null, null, room);
+                }
+            }
 
             function parseCapacityQuery(rawQuery) {
                 const trimmed = rawQuery.trim();
@@ -998,7 +1439,7 @@ RMMMMRMMMMME        EMMMMMMMMMMMMM!
                 }
 
                 if (!showSettings && results.length === 0) {
-                    currentSearchResults.innerHTML = '<div class="p-3 text-gray-400">Nessun risultato trovato.</div>';
+                    currentSearchResults.innerHTML = `<div class="p-3 text-gray-400">${t('search_no_results')}</div>`;
                     currentSearchResults.classList.remove('hidden');
                     return;
                 }
@@ -1041,12 +1482,12 @@ RMMMMRMMMMME        EMMMMMMMMMMMMM!
                             <div class="title">${result.room.nome}</div>
                             <div class="details">
                                 Polo ${result.polo.charAt(0).toUpperCase() + result.polo.slice(1)} <span class="material-symbols-outlined" style="font-size: 14px; vertical-align: -3px;">chevron_right</span>
-                                Edificio ${result.edificio.toUpperCase()} <span class="material-symbols-outlined" style="font-size: 14px; vertical-align: -3px;">chevron_right</span>
-                                Piano ${result.piano}${capacityDetails ? '<div>Capienza ' + capacityDetails + '</div>' : ''}
+                                ${t('building')} ${result.edificio.toUpperCase()} <span class="material-symbols-outlined" style="font-size: 14px; vertical-align: -3px;">chevron_right</span>
+                                ${t('floor')} ${result.piano}${capacityDetails ? '<div>' + t('capacity') + ' ' + capacityDetails + '</div>' : ''}
                             </div>
                         `;
                         resultElement.addEventListener('click', () => {
-                            selectPolo(result.polo, result.edificio, result.piano);
+                            selectRoom(result.polo, result.edificio, result.piano, result.room);
                             currentSearchResults.classList.add('hidden');
                             currentSearchInput.value = result.room.nome;
                             // Sincronizza l'altro input
@@ -1072,29 +1513,29 @@ RMMMMRMMMMME        EMMMMMMMMMMMMM!
                 const settingsItems = [
                     {
                         key: 'sharePath',
-                        label: 'Condividi polo/edificio/piano',
-                        description: 'Include queste informazioni nel link condiviso',
+                        label: t('settings_share_path'),
+                        description: t('settings_share_path_description'),
                         checked: settingsConfig.sharePath,
                         onToggle: setSharePathSetting
                     },
                     {
                         key: 'shareCoordinates',
-                        label: 'Condividi coordinate mappa (α)',
-                        description: 'Aggiunge posizione e zoom del viewer al link',
+                        label: t('settings_share_coordinates'),
+                        description: t('settings_share_coordinates_description'),
                         checked: settingsConfig.shareCoordinates,
                         onToggle: setShareCoordinatesSetting
                     },
                     {
                         key: 'extraControls',
-                        label: 'Controlli extra',
-                        description: 'Mostra pulsante condividi e controlli zoom',
+                        label: t('settings_extra_controls'),
+                        description: t('settings_extra_controls_description'),
                         checked: accessibilityToggle.checked,
                         onToggle: setExtraControlsSetting
                     },
                     {
                         key: 'highContrast',
-                        label: 'Alto contrasto',
-                        description: 'Sfondo bianco con testo nero per migliore accessibilità',
+                        label: t('settings_high_contrast'),
+                        description: t('settings_high_contrast_description'),
                         checked: settingsConfig.highContrast,
                         onToggle: setHighContrastSetting
                     }
@@ -1120,6 +1561,26 @@ RMMMMRMMMMME        EMMMMMMMMMMMMM!
 
                     container.appendChild(row);
                 });
+
+                // Add text size control
+                const textSizeRow = document.createElement('div');
+                textSizeRow.className = 'search-result-item flex items-center justify-between gap-4';
+                const textSizeControl = createTextSizeControl({
+                    label: t('settings_text_size'),
+                    description: t('settings_text_size_description')
+                });
+                textSizeRow.appendChild(textSizeControl);
+                container.appendChild(textSizeRow);
+
+                // Add language selector
+                const languageRow = document.createElement('div');
+                languageRow.className = 'search-result-item flex items-center justify-between gap-4';
+                const languageControl = createLanguageSelector({
+                    label: t('settings_language'),
+                    description: t('settings_language_description')
+                });
+                languageRow.appendChild(languageControl);
+                container.appendChild(languageRow);
 
                 syncSettingsToggles();
             }
@@ -1168,6 +1629,133 @@ RMMMMRMMMMME        EMMMMMMMMMMMMM!
                 return wrapper;
             }
 
+            function createTextSizeControl({ label, description }) {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'flex items-center justify-between gap-4 w-full';
+
+                const textContainer = document.createElement('div');
+                textContainer.className = 'flex flex-col text-left';
+
+                const titleSpan = document.createElement('span');
+                titleSpan.className = 'title';
+                titleSpan.textContent = label;
+                textContainer.appendChild(titleSpan);
+
+                if (description) {
+                    const descriptionSpan = document.createElement('span');
+                    descriptionSpan.className = 'details';
+                    descriptionSpan.textContent = description;
+                    textContainer.appendChild(descriptionSpan);
+                }
+
+                const controlsContainer = document.createElement('div');
+                controlsContainer.className = 'text-size-controls flex-shrink-0';
+
+                const decreaseBtn = document.createElement('button');
+                decreaseBtn.className = 'text-size-btn';
+                decreaseBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 18px;">remove</span>';
+                decreaseBtn.title = 'Riduci dimensione testo';
+
+                const increaseBtn = document.createElement('button');
+                increaseBtn.className = 'text-size-btn';
+                increaseBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 18px;">add</span>';
+                increaseBtn.title = 'Aumenta dimensione testo';
+
+                const textSizes = ['text-small', 'text-normal', 'text-large', 'text-xlarge'];
+
+                function updateTextSize() {
+                    const currentSize = textSizes.findIndex(size => document.body.classList.contains(size));
+                    const index = currentSize >= 0 ? currentSize : 1; // default to normal
+                    decreaseBtn.disabled = index === 0;
+                    increaseBtn.disabled = index === textSizes.length - 1;
+                }
+
+                decreaseBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const currentSize = textSizes.findIndex(size => document.body.classList.contains(size));
+                    const index = currentSize >= 0 ? currentSize : 1;
+                    if (index > 0) {
+                        setTextSizeSetting(textSizes[index - 1]);
+                    }
+                });
+
+                increaseBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const currentSize = textSizes.findIndex(size => document.body.classList.contains(size));
+                    const index = currentSize >= 0 ? currentSize : 1;
+                    if (index < textSizes.length - 1) {
+                        setTextSizeSetting(textSizes[index + 1]);
+                    }
+                });
+
+                controlsContainer.appendChild(decreaseBtn);
+                controlsContainer.appendChild(increaseBtn);
+
+                wrapper.appendChild(textContainer);
+                wrapper.appendChild(controlsContainer);
+
+                // Initial update
+                updateTextSize();
+
+                // Store reference for syncing
+                wrapper.updateTextSize = updateTextSize;
+
+                return wrapper;
+            }
+
+            function createLanguageSelector({ label, description }) {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'flex items-center justify-between gap-4 w-full';
+
+                const textContainer = document.createElement('div');
+                textContainer.className = 'flex flex-col text-left';
+
+                const titleSpan = document.createElement('span');
+                titleSpan.className = 'title';
+                titleSpan.textContent = label;
+                textContainer.appendChild(titleSpan);
+
+                if (description) {
+                    const descriptionSpan = document.createElement('span');
+                    descriptionSpan.className = 'details';
+                    descriptionSpan.textContent = description;
+                    textContainer.appendChild(descriptionSpan);
+                }
+
+                const selectContainer = document.createElement('div');
+                selectContainer.className = 'flex-shrink-0';
+
+                const select = document.createElement('select');
+                select.className = 'text-size-btn';
+                select.style.minWidth = '100px';
+                select.style.cursor = 'pointer';
+
+                const languages = [
+                    { code: 'it', label: t('language_italian') },
+                    { code: 'en', label: t('language_english') }
+                ];
+
+                languages.forEach(lang => {
+                    const option = document.createElement('option');
+                    option.value = lang.code;
+                    option.textContent = lang.label;
+                    option.selected = currentLanguage === lang.code;
+                    select.appendChild(option);
+                });
+
+                select.addEventListener('change', async (e) => {
+                    e.stopPropagation();
+                    const newLang = e.target.value;
+                    await setLanguageSetting(newLang);
+                });
+
+                selectContainer.appendChild(select);
+                wrapper.appendChild(textContainer);
+                wrapper.appendChild(selectContainer);
+
+                return wrapper;
+            }
+
             function setSharePathSetting(isEnabled) {
                 settingsConfig.sharePath = isEnabled;
                 localStorage.setItem('sharePathEnabled', isEnabled);
@@ -1200,6 +1788,51 @@ RMMMMRMMMMME        EMMMMMMMMMMMMM!
                     document.body.classList.remove('high-contrast');
                 }
                 syncSettingsToggles();
+            }
+
+            function setTextSizeSetting(sizeClass) {
+                const textSizes = ['text-small', 'text-normal', 'text-large', 'text-xlarge'];
+                // Remove all text size classes
+                textSizes.forEach(size => document.body.classList.remove(size));
+                // Add the new size class
+                document.body.classList.add(sizeClass);
+                // Save to localStorage
+                localStorage.setItem('textSizeEnabled', sizeClass);
+                // Update all text size controls
+                syncTextSizeControls();
+            }
+
+            async function setLanguageSetting(lang) {
+                const success = await loadTranslations(lang);
+                if (success) {
+                    settingsConfig.language = lang;
+                    localStorage.setItem('selectedLanguage', lang);
+                    applyTranslations();
+                    
+                    // Refresh the current view to update all text
+                    if (selectedPolo && selectedBuilding && selectedFloor) {
+                        populateBuildings(Object.keys(data.polo[selectedPolo].edificio));
+                        populateFloors(selectedBuilding);
+                        populateRooms(selectedBuilding, selectedFloor);
+                    }
+                    
+                    // Refresh search results if visible
+                    const currentSearchResults = isMobile() ? searchResultsMobile : searchResults;
+                    const currentSearchInput = isMobile() ? searchInputMobile : searchInput;
+                    if (!currentSearchResults.classList.contains('hidden')) {
+                        searchRooms(currentSearchInput.value);
+                    }
+                }
+            }
+
+            function syncTextSizeControls() {
+                // Update all text size control displays
+                document.querySelectorAll('.text-size-controls').forEach(controls => {
+                    const wrapper = controls.closest('.search-result-item');
+                    if (wrapper && wrapper.updateTextSize) {
+                        wrapper.updateTextSize();
+                    }
+                });
             }
 
             function syncSettingsToggles() {
@@ -1314,7 +1947,7 @@ RMMMMRMMMMME        EMMMMMMMMMMMMM!
                 navigator.clipboard.writeText(url).then(() => {
                     // Feedback per l'utente (tooltip)
                     const originalTooltip = shareBtn.getAttribute('data-tooltip');
-                    shareBtn.setAttribute('data-tooltip', 'Link copiato!');
+                    shareBtn.setAttribute('data-tooltip', t('share_link_copied'));
                     showTooltip({ currentTarget: shareBtn }); // Mostra subito il nuovo tooltip
                     setTimeout(() => {
                         shareBtn.setAttribute('data-tooltip', originalTooltip);
@@ -1324,7 +1957,7 @@ RMMMMRMMMMME        EMMMMMMMMMMMMM!
                     console.error('Errore nella copia del link: ', err);
                     // Fallback per l'utente
                     const originalTooltip = shareBtn.getAttribute('data-tooltip');
-                    shareBtn.setAttribute('data-tooltip', 'Errore!');
+                    shareBtn.setAttribute('data-tooltip', t('share_error_short'));
                     showTooltip({ currentTarget: shareBtn });
                     setTimeout(() => {
                         shareBtn.setAttribute('data-tooltip', originalTooltip);
@@ -1346,12 +1979,12 @@ RMMMMRMMMMME        EMMMMMMMMMMMMM!
                     params.set('v', currentView);
                 }
 
-                if (settingsConfig.shareCoordinates && panzoomInstance) {
-                    const pan = panzoomInstance.getPan();
-                    const scale = panzoomInstance.getScale();
-                    params.set('x', Math.round(pan.x));
-                    params.set('y', Math.round(pan.y));
-                    params.set('z', scale.toFixed(2));
+                if (settingsConfig.shareCoordinates && map) {
+                    const center = map.getCenter();
+                    const zoom = map.getZoom();
+                    params.set('x', center.lng.toFixed(2));
+                    params.set('y', center.lat.toFixed(2));
+                    params.set('z', zoom.toFixed(2));
                 }
 
                 const paramString = params.toString();
@@ -1423,20 +2056,20 @@ RMMMMRMMMMME        EMMMMMMMMMMMMM!
 
             // Listener per i nuovi bottoni di zoom
             zoomInBtn.addEventListener('click', () => {
-                if (panzoomInstance) {
-                    panzoomInstance.zoomIn();
+                if (map) {
+                    map.zoomIn();
                 }
             });
 
             zoomOutBtn.addEventListener('click', () => {
-                if (panzoomInstance) {
-                    panzoomInstance.zoomOut();
+                if (map) {
+                    map.zoomOut();
                 }
             });
 
             resetZoomBtn.addEventListener('click', () => {
-                if (panzoomInstance) {
-                    panzoomInstance.reset();
+                if (map && svgOverlay) {
+                    map.fitBounds(svgOverlay.getBounds());
                 }
             });
 
@@ -1481,7 +2114,7 @@ RMMMMRMMMMME        EMMMMMMMMMMMMM!
                 });
             }
 
-            function selectPolo(polo, buildingToSelect = null, floorToSelect = null, viewParams = null, viewToSelect = null) {
+            function selectPolo(polo, buildingToSelect = null, floorToSelect = null, viewParams = null, viewToSelect = null, roomData = null) {
                 selectedPolo = polo;
                 const buildings = Object.keys(data.polo[polo].edificio);
                 populateBuildings(buildings);
@@ -1498,11 +2131,11 @@ RMMMMRMMMMME        EMMMMMMMMMMMMM!
 
                 if (buildings.length > 0) {
                     const building = buildingToSelect && buildings.includes(buildingToSelect) ? buildingToSelect : buildings[0];
-                    selectBuilding(building, floorToSelect, viewParams, viewToSelect);
+                    selectBuilding(building, floorToSelect, viewParams, viewToSelect, roomData);
                 } else {
                     floorsList.innerHTML = '';
                     roomsList.innerHTML = '';
-                    viewerContainer.innerHTML = '<p class="p-2 text-gray-500">Nessun edificio in questo polo.</p>';
+                    viewerContainer.innerHTML = `<p class="p-2 text-gray-500">${t('no_buildings_message')}</p>`;
                 }
             }
 
@@ -1515,7 +2148,7 @@ RMMMMRMMMMME        EMMMMMMMMMMMMM!
                         <span class="material-symbols-outlined" style="font-size: 20px; line-height: 1;">
                         corporate_fare
                         </span>
-                        <span>Edificio ${building.toUpperCase()}</span>
+                        <span>${t('building')} ${building.toUpperCase()}</span>
                     `;
                     button.addEventListener('click', () => selectBuilding(building));
                     buildingsList.appendChild(button);
@@ -1532,7 +2165,7 @@ RMMMMRMMMMME        EMMMMMMMMMMMMM!
                         <span class="material-symbols-outlined" style="font-size: 20px; line-height: 1;">
                         layers
                         </span>
-                        <span>Piano ${floor}</span>
+                        <span>${t('floor')} ${floor}</span>
                     `;
                     button.addEventListener('click', () => selectFloor(floor));
                     floorsList.appendChild(button);
@@ -1540,7 +2173,9 @@ RMMMMRMMMMME        EMMMMMMMMMMMMM!
             }
 
             function populateRooms(building, floor) {
-                roomsList.innerHTML = '';
+                const roomsTitleElement = document.getElementById('rooms-title');
+                const roomsListParent = roomsList.parentElement;
+                
                 const floorData = data.polo[selectedPolo].edificio[building]?.piano[floor];
                 
                 // Gestisce entrambe le strutture dati: array di aule o oggetto con chiave 'aule'
@@ -1549,14 +2184,26 @@ RMMMMRMMMMME        EMMMMMMMMMMMMM!
                 const departments = rooms.filter(room => room.type === 'dipartimento');
                 const regularRooms = rooms.filter(room => room.type !== 'dipartimento');
 
-                if (departments.length > 0) {
-                    // Add Dipartimento header
-                    const deptHeader = document.createElement('h4');
-                    deptHeader.textContent = 'Dipartimento';
-                    deptHeader.className = 'text-sm font-semibold text-gray-500 uppercase tracking-wider';
-                    roomsList.appendChild(deptHeader);
+                // Rimuovi eventuali elementi temporanei precedenti
+                const oldDeptHeader = document.getElementById('temp-dept-header');
+                if (oldDeptHeader) oldDeptHeader.remove();
+                const oldDeptContainer = document.getElementById('temp-dept-container');
+                if (oldDeptContainer) oldDeptContainer.remove();
 
-                    // List departments
+                // Se ci sono dipartimenti, crea una sezione dedicata PRIMA del titolo "Aule"
+                if (departments.length > 0) {
+                    // Crea header dipartimenti
+                    const deptHeader = document.createElement('h3');
+                    deptHeader.textContent = t('department_singular');
+                    deptHeader.className = 'text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2';
+                    deptHeader.id = 'temp-dept-header';
+                    
+                    // Crea contenitore per i dipartimenti
+                    const deptContainer = document.createElement('div');
+                    deptContainer.id = 'temp-dept-container';
+                    deptContainer.className = 'mb-4';
+
+                    // Aggiungi i dipartimenti al contenitore dedicato
                     departments.forEach(dept => {
                         const deptElement = document.createElement('div');
                         deptElement.className = 'w-full text-left p-2 pl-8';
@@ -1570,7 +2217,7 @@ RMMMMRMMMMME        EMMMMMMMMMMMMM!
                             mapBtn.href = dept['link-mappa'];
                             mapBtn.target = '_blank';
                             mapBtn.className = 'flex items-center space-x-2 p-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors';
-                            mapBtn.innerHTML = `<span class="material-symbols-outlined" style="font-size: 16px;">map</span><span>Mappa</span>`;
+                            mapBtn.innerHTML = `<span class="material-symbols-outlined" style="font-size: 16px;">map</span><span>${t('map_button')}</span>`;
                             buttonsContainer.appendChild(mapBtn);
                         }
                         
@@ -1579,20 +2226,33 @@ RMMMMRMMMMME        EMMMMMMMMMMMMM!
                             deptBtn.href = dept['link-dipartimento'];
                             deptBtn.target = '_blank';
                             deptBtn.className = 'flex items-center space-x-2 p-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors';
-                            deptBtn.innerHTML = `<span class="material-symbols-outlined" style="font-size: 16px;">language</span><span>Sito</span>`;
+                            deptBtn.innerHTML = `<span class="material-symbols-outlined" style="font-size: 16px;">language</span><span>${t('website_button')}</span>`;
                             buttonsContainer.appendChild(deptBtn);
                         }
                         
                         deptElement.appendChild(buttonsContainer);
-                        roomsList.appendChild(deptElement);
+                        deptContainer.appendChild(deptElement);
                     });
+                    
+                    // Inserisci header e contenitore dipartimenti PRIMA del titolo "Aule"
+                    roomsListParent.insertBefore(deptContainer, roomsTitleElement);
+                    roomsListParent.insertBefore(deptHeader, deptContainer);
+                    
+                    // Il titolo "Aule" rimane visibile
+                    if (roomsTitleElement) {
+                        roomsTitleElement.style.display = '';
+                        roomsTitleElement.style.marginTop = ''; // Nessun margine extra necessario
+                    }
+                } else {
+                    // Mostra il titolo statico senza margine extra
+                    if (roomsTitleElement) {
+                        roomsTitleElement.style.display = '';
+                        roomsTitleElement.style.marginTop = '';
+                    }
                 }
-
-                // Always add Aule header
-                const auleHeader = document.createElement('h4');
-                auleHeader.textContent = 'Aule';
-                auleHeader.className = 'text-sm font-semibold text-gray-500 uppercase tracking-wider';
-                roomsList.appendChild(auleHeader);
+                
+                // Svuota la lista delle aule
+                roomsList.innerHTML = '';
 
                 // List regular rooms
                 if (regularRooms.length > 0) {
@@ -1629,27 +2289,32 @@ RMMMMRMMMMME        EMMMMMMMMMMMMM!
                         roomInfoElement.className = 'capacity-info hidden pl-14 p-1 text-sm text-gray-600';
 
                         // Accessibility
-                        addInfoRow(room.capienza, "group", "Capienza: %s");
-                        addInfoRow(room.accesso_disabili, "accessible_forward", "Accesso Disabili")
-                        addInfoRow(!room.accesso_disabili, "not_accessible_forward", "Mancato Accesso Disabili")
+                        addInfoRow(room.capienza, "group", t('room_detail_capacity'));
+                        addInfoRow(room.accesso_disabili, "accessible_forward", t('room_detail_accessible'));
+                        addInfoRow(!room.accesso_disabili, "not_accessible_forward", t('room_detail_not_accessible'));
 
                         // For the student
-                        addInfoRow(room.rete, "wifi", "Accesso di Rete")
-                        addInfoRow(room.porte_rete, "lan", "Porte di Rete")
-                        addInfoRow(room.prese_elettriche, "bolt", "Prese Elettriche")
+                        addInfoRow(room.rete, "wifi", t('room_detail_network'));
+                        addInfoRow(room.porte_rete, "lan", t('room_detail_network_ports'));
+                        addInfoRow(room.prese_elettriche, "bolt", t('room_detail_power_outlets'));
 
                         // Both - functionality / lab
-                        if (!addInfoRow(room.numero_pc, "computer", "Computer Presenti: %s"))
-                            addInfoRow(room.presenza_pc, "computer", "Computer Presenti") // In case we don't know the amount
+                        if (!addInfoRow(room.numero_pc, "computer", t('room_detail_computers_count')))
+                            addInfoRow(room.presenza_pc, "computer", t('room_detail_computers')); // In case we don't know the amount
                         
                         // For the professor
-                        addInfoRow(room.proiettore, "cast", "Proiettore")
-                        addInfoRow(room.autoparlanti, "speaker_group", "Autoparlanti")
-                        addInfoRow(room.telecamera, "speed_camera", "Telecamera fissa")
+                        addInfoRow(room.proiettore, "cast", t('room_detail_projector'));
+                        addInfoRow(room.autoparlanti, "speaker_group", t('room_detail_speakers'));
+                        addInfoRow(room.telecamera, "speed_camera", t('room_detail_camera'));
                         addInfoRow(room.lavagna, "draw", "Lavagna: %s")
 
                         roomElement.addEventListener('click', (e) => {
                             e.preventDefault();
+                            
+                            // Centra la mappa sull'aula usando la funzione centralizzata
+                            centerMapOnRoom(room);
+                            
+                            // Toggle delle informazioni dell'aula
                             roomInfoElement.classList.toggle('hidden');
                             const expandIcon = roomElement.querySelector('.expand-icon');
                             expandIcon.style.transform = roomInfoElement.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(180deg)';
@@ -1662,12 +2327,12 @@ RMMMMRMMMMME        EMMMMMMMMMMMMM!
                 } else {
                     const noRoomsMsg = document.createElement('p');
                     noRoomsMsg.className = 'p-2 pl-8 text-sm text-gray-500';
-                    noRoomsMsg.textContent = 'Nessuna aula trovata';
+                    noRoomsMsg.textContent = t('no_rooms_found');
                     roomsList.appendChild(noRoomsMsg);
                 }
             }
 
-            function selectBuilding(building, floorToSelect = null, viewParams = null, viewToSelect = null) {
+            function selectBuilding(building, floorToSelect = null, viewParams = null, viewToSelect = null, roomData = null) {
                 selectedBuilding = building;
                 populateFloors(building);
 
@@ -1690,14 +2355,14 @@ RMMMMRMMMMME        EMMMMMMMMMMMMM!
                 } else if (floors.length > 0) {
                     floorToSet = floors[0];
                 }
-                selectFloor(floorToSet, viewParams, viewToSelect);
+                selectFloor(floorToSet, viewParams, viewToSelect, roomData);
             }
 
-            function selectFloor(floor, viewParams = null, viewToSelect = null) {
+            function selectFloor(floor, viewParams = null, viewToSelect = null, roomData = null) {
                 selectedFloor = floor;
                 
                 const view = viewToSelect === 'perspective' ? 'perspective' : 'top';
-                selectView(view, true, viewParams);
+                selectView(view, true, viewParams, roomData);
                 populateRooms(selectedBuilding, selectedFloor);
 
                 // Aggiorna lo stile dei bottoni dei piani
@@ -1714,12 +2379,12 @@ RMMMMRMMMMME        EMMMMMMMMMMMMM!
                     updateURL(true); // Aggiorna l'URL ogni volta che si seleziona un piano
             }
 
-            function selectView(viewType, forceReload = false, viewParams = null) {
+            function selectView(viewType, forceReload = false, viewParams = null, roomData = null) {
                 if (currentView === viewType && !forceReload) return;
 
                 currentView = viewType;
                 if (selectedFloor !== "?")
-                    loadSVG(selectedBuilding, selectedFloor, currentView, viewParams);
+                    loadSVG(selectedBuilding, selectedFloor, currentView, viewParams, roomData);
 
                 // Aggiorna stile bottoni vista
                 if (viewType === 'top') {
@@ -1747,7 +2412,7 @@ RMMMMRMMMMME        EMMMMMMMMMMMMM!
                     });
             }
 
-            function loadSVG(building, floor, viewType = 'top', viewParams = null) {
+            function loadSVG(building, floor, viewType = 'top', viewParams = null, roomData = null) {
                 // Controlla se la vista top è disponibile
                 checkForTopView(building, floor);
 
@@ -1768,56 +2433,76 @@ RMMMMRMMMMME        EMMMMMMMMMMMMM!
                     .then(svgData => {
                         // Attendi che l'animazione di fade out sia completata
                         setTimeout(() => {
-                            viewerContainer.innerHTML = svgData;
-                            const svgElement = viewerContainer.querySelector('svg');
-                            if (svgElement) {
-                                // Strip embedded tooltips so hovering the map stays silent
-                                svgElement.querySelectorAll('title, desc').forEach(node => node.remove());
-                                svgElement.querySelectorAll('[title]').forEach(el => el.removeAttribute('title'));
-                                svgElement.querySelectorAll('[data-tooltip]').forEach(el => el.removeAttribute('data-tooltip'));
-                                // MODIFICA: Rimuovi queste righe per permettere al flex di centrare
-                                // svgElement.style.width = '100%';
-                                // svgElement.style.height = '100%';
-
-                                // Distruggi l'istanza precedente di Panzoom
-                                if (panzoomInstance) {
-                                    panzoomInstance.destroy();
-                                }
-                                
-                                // Crea una nuova istanza di Panzoom con configurazione ottimizzata
-                                panzoomInstance = Panzoom(svgElement, {
-                                    maxScale: 10,
-                                    minScale: 0.5,
-                                    step: 0.15, // Incremento zoom più fluido
-                                    animate: true,
-                                    duration: 300, // Durata animazione più fluida
-                                    easing: 'ease-out',
-                                    startScale: viewParams && viewParams.z ? parseFloat(viewParams.z) : 1,
-                                    startX: viewParams && viewParams.x ? parseFloat(viewParams.x) : 0,
-                                    startY: viewParams && viewParams.y ? parseFloat(viewParams.y) : 0,
-                                    panOnlyWhenZoomed: false,
-                                    disablePan: false,
-                                    cursor: 'move'
+                            // Parse SVG per ottenere dimensioni
+                            const parser = new DOMParser();
+                            const svgDoc = parser.parseFromString(svgData, 'image/svg+xml');
+                            const svgElement = svgDoc.documentElement;
+                            
+                            // Strip embedded tooltips
+                            svgElement.querySelectorAll('title, desc').forEach(node => node.remove());
+                            svgElement.querySelectorAll('[title]').forEach(el => el.removeAttribute('title'));
+                            svgElement.querySelectorAll('[data-tooltip]').forEach(el => el.removeAttribute('data-tooltip'));
+                            
+                            // Ottieni viewBox o dimensioni SVG
+                            const viewBox = svgElement.getAttribute('viewBox');
+                            let width, height;
+                            
+                            if (viewBox) {
+                                const parts = viewBox.split(/\s+|,/);
+                                width = parseFloat(parts[2]);
+                                height = parseFloat(parts[3]);
+                            } else {
+                                width = parseFloat(svgElement.getAttribute('width')) || 1000;
+                                height = parseFloat(svgElement.getAttribute('height')) || 1000;
+                            }
+                            
+                            // Serializza SVG modificato
+                            const serializer = new XMLSerializer();
+                            const modifiedSvgData = serializer.serializeToString(svgElement);
+                            const svgDataUrl = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(modifiedSvgData)));
+                            
+                            // Crea bounds per Leaflet (coordinate semplici basate sulle dimensioni SVG)
+                            const bounds = [[0, 0], [height, width]];
+                            
+                            // Inizializza o re-inizializza la mappa
+                            if (!map) {
+                                map = L.map('map', {
+                                    crs: L.CRS.Simple,
+                                    minZoom: -2,
+                                    maxZoom: 4,
+                                    zoomControl: false,
+                                    attributionControl: false
                                 });
-
-                                // Aggiungi listener per aggiornare l'URL durante il pan/zoom
-                                svgElement.addEventListener('panzoomend', (e) => {
-                                    updateURL(true);
-                                });
-
-                                // Centra e adatta l'SVG al contenitore se non ci sono parametri di vista
-                                if (!viewParams || !viewParams.x) {
-                                    setTimeout(() => {
-                                        if (panzoomInstance) {
-                                            panzoomInstance.reset();
-                                        }
-                                    }, 0);
+                            } else {
+                                // Rimuovi il layer SVG precedente se esiste
+                                if (svgOverlay) {
+                                    map.removeLayer(svgOverlay);
                                 }
-
-
-                                // Abilita lo zoom con la rotella del mouse
-                                // usando direttamente l'elemento SVG con la configurazione corretta
-                                svgElement.parentElement.addEventListener('wheel', panzoomInstance.zoomWithWheel);
+                            }
+                            
+                            // Crea e aggiungi overlay SVG
+                            svgOverlay = L.imageOverlay(svgDataUrl, bounds).addTo(map);
+                            
+                            // Aggiungi listener per aggiornare URL
+                            map.on('moveend zoomend', () => {
+                                updateURL(true);
+                            });
+                            
+                            // Imposta la vista iniziale
+                            // Priorità: 1) coordinate della room, 2) viewParams dall'URL, 3) fitBounds di default
+                            if (roomData && roomData.coordinates && roomData.coordinates.x != null && roomData.coordinates.y != null) {
+                                // Usa le coordinate dell'aula se presenti
+                                const center = [parseFloat(roomData.coordinates.y), parseFloat(roomData.coordinates.x)];
+                                const zoom = roomData.coordinates.zoom != null ? parseFloat(roomData.coordinates.zoom) : 2;
+                                map.setView(center, zoom);
+                            } else if (viewParams && viewParams.x && viewParams.y && viewParams.z) {
+                                // Usa i parametri salvati dall'URL
+                                const center = [parseFloat(viewParams.y), parseFloat(viewParams.x)];
+                                const zoom = parseFloat(viewParams.z);
+                                map.setView(center, zoom);
+                            } else {
+                                // Adatta alla vista
+                                map.fitBounds(bounds);
                             }
                             
                             // Rimuovi la classe loading per il fade in
@@ -1828,7 +2513,8 @@ RMMMMRMMMMME        EMMMMMMMMMMMMM!
                     })
                     .catch(error => {
                         setTimeout(() => {
-                            viewerContainer.innerHTML = `<p class="text-red-500">${error.message}</p>`;
+                            const mapContainer = document.getElementById('map');
+                            mapContainer.innerHTML = `<p class="text-red-500 p-4">${error.message}</p>`;
                             viewerContainer.classList.remove('loading');
                         }, 300);
                     });
