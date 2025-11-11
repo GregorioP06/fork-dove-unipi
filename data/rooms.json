@@ -729,7 +729,7 @@
             "2": [
               {
                 "id": "fib_di-c-2",
-                "nome": "Dipartimaento di Informatica",
+                "nome": "Dipartimento di Informatica",
                 "alias": [
                   "DI"
                 ],
@@ -738,8 +738,7 @@
                 "link-mappa": "https://di.unipi.it/mappa-dipartimento/",
                 "link-dipartimento": "https://di.unipi.it/"
               }
-            ],
-            "-1": []
+            ]
           }
         },
         "d": {
